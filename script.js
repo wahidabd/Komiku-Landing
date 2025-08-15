@@ -1,10 +1,137 @@
-// Mobile Navigation Toggle
+// Add particle background effect to hero section with theme support
+function createParticles() {
+    const heroSection = document.querySelector('.hero-section');
+    if (!heroSection) return;
+
+    const existingParticles = heroSection.querySelector('.particles');
+    if (existingParticles) {
+        existingParticles.remove();
+    }
+
+    const particlesContainer = document.createElement('div');
+    particlesContainer.className = 'particles';
+    particlesContainer.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    `;
+
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        particle.style.cssText = `
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: ${isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.5)'};
+            border-radius: 50%;
+            animation: float-particle ${5 + Math.random() * 10}s linear infinite;
+            left: ${Math.random() * 100}%;
+            top: ${Math.random() * 100}%;
+        `;
+        particlesContainer.appendChild(particle);
+    }
+
+    heroSection.appendChild(particlesContainer);
+}
+
+// Update particles when theme changes
+function updateParticlesForTheme() {
+    setTimeout(createParticles, 100);
+}
+
+// Listen for theme changes to update particles
+const themeObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+            updateParticlesForTheme();
+        }
+    });
+});
+
+themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+});// Mobile Navigation Toggle
 const mobileMenu = document.getElementById('mobile-menu');
 const navMenu = document.getElementById('nav-menu');
 
 mobileMenu.addEventListener('click', () => {
     mobileMenu.classList.toggle('active');
     navMenu.classList.toggle('active');
+});
+
+// Theme Toggle Functionality
+const themeToggle = document.getElementById('theme-toggle');
+const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+// Check for saved theme preference or default to 'light'
+const currentTheme = localStorage.getItem('theme');
+const systemTheme = prefersDarkScheme.matches ? 'dark' : 'light';
+
+// Set initial theme
+if (currentTheme) {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    updateThemeIcon(currentTheme);
+    updateLogo(currentTheme);
+} else {
+    document.documentElement.setAttribute('data-theme', systemTheme);
+    updateThemeIcon(systemTheme);
+    updateLogo(systemTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    if (theme === 'dark') {
+        icon.className = 'fas fa-moon';
+    } else {
+        icon.className = 'fas fa-sun';
+    }
+}
+
+function updateLogo(theme) {
+    const logo = document.querySelector('.logo-icon');
+    const favicon = document.getElementById('favicon');
+
+    if (logo && favicon) {
+        if (theme === 'dark') {
+            logo.src = 'assets/img_logo_light.png';
+            favicon.href = 'assets/img_logo_light.png';
+        } else {
+            logo.src = 'assets/img_logo_dark.png';
+            favicon.href = 'assets/img_logo_dark.png';
+        }
+    }
+}
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+    updateLogo(newTheme);
+
+    // Add a smooth transition effect
+    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    setTimeout(() => {
+        document.body.style.transition = '';
+    }, 300);
+});
+
+// Listen for system theme changes
+prefersDarkScheme.addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+        const newTheme = e.matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        updateThemeIcon(newTheme);
+        updateLogo(newTheme);
+    }
 });
 
 // Close mobile menu when clicking on a link
@@ -210,7 +337,7 @@ window.addEventListener('load', () => {
     }, 100);
 });
 
-// Enhanced scroll to top functionality
+// Enhanced scroll to top functionality with theme support
 let scrollToTopBtn = document.createElement('button');
 scrollToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
 scrollToTopBtn.className = 'scroll-to-top';
@@ -243,13 +370,6 @@ window.addEventListener('scroll', () => {
         scrollToTopBtn.style.opacity = '0';
         scrollToTopBtn.style.visibility = 'hidden';
     }
-});
-
-scrollToTopBtn.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
 });
 
 scrollToTopBtn.addEventListener('mouseenter', () => {
@@ -369,20 +489,39 @@ revealElements.forEach(element => {
     revealObserver.observe(element);
 });
 
-// Console easter egg
+// Console Easter egg with theme awareness
+const theme = document.documentElement.getAttribute('data-theme') || 'light';
+const logoColor = theme === 'dark' ? '#9333ea' : '#6366f1';
+
 console.log(`
-╔═══════════════════════════════════╗
+%c╔═══════════════════════════════════╗
 ║           Welcome to              ║
 ║            KomiKu!               ║
 ║                                   ║
 ║   Thanks for checking the code!   ║
 ║     Made with ❤️ and ☕           ║
-╚═══════════════════════════════════╝
-`);
+║                                   ║
+║   🌙 Try the dark theme toggle!   ║
+╚═══════════════════════════════════╝`, `color: ${logoColor}; font-weight: bold;`);
 
 // Add performance monitoring
 let pageLoadTime = performance.now();
 window.addEventListener('load', () => {
     const loadTime = performance.now() - pageLoadTime;
     console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
+});
+
+// Image loading placeholder functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const heroImages = document.querySelectorAll('.floating-card .comic-image');
+
+    heroImages.forEach(img => {
+        if (img.complete) {
+            img.classList.add('loaded');
+        } else {
+            img.addEventListener('load', () => {
+                img.classList.add('loaded');
+            });
+        }
+    });
 });
